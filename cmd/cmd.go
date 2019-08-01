@@ -17,6 +17,10 @@ func init() {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
+
+	rootCmd.AddCommand(
+		newUseContextCmd(),
+	)
 }
 
 func Execute() {
@@ -25,8 +29,6 @@ func Execute() {
 	}
 }
 
-// klingo runs the UI or perform a quick connection
-// if one argument is given.
 func klingo(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return tui.RunTUI()
