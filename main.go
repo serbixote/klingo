@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/marco2704/klingo/cmd"
+	"github.com/marco2704/klingo/cli"
 )
 
 func main() {
-	cmd.Execute()
+	cli.Execute()
 }

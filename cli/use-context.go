@@ -1,7 +1,10 @@
-package cmd
+package cli
 
 import (
+	"errors"
+	"github.com/marco2704/klingo/internal/config"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func newUseContextCmd() *cobra.Command {
@@ -14,5 +17,16 @@ func newUseContextCmd() *cobra.Command {
 }
 
 func useContext(cmd *cobra.Command, args []string) error {
-	return nil
+	config, err := config.GetKlingoConfig()
+	if err != nil {
+		return err
+	}
+
+	context := args[0]
+
+	if strings.TrimSpace(context) == "" {
+		return errors.New("Invalid blank argument")
+	}
+
+	return config.UseContext(context)
 }

@@ -1,7 +1,7 @@
-package cmd
+package cli
 
 import (
-	"github.com/marco2704/klingo/tui"
+	"github.com/marco2704/klingo/internal/tui"
 	"github.com/spf13/cobra"
 	"log"
 )
