@@ -1,9 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"github.com/marco2704/klingo/internal/tui"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var rootCmd *cobra.Command
@@ -25,7 +25,7 @@ func init() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }
 

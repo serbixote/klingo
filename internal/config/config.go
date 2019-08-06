@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -8,7 +9,7 @@ import (
 )
 
 const (
-	defaultKlingoDir    string      = "~/.klingo"
+	defaultKlingoDir    string      = ".klingo"
 	FullOwnerPermission os.FileMode = 0700
 )
 
@@ -35,23 +36,28 @@ func GetKlingoConfig() (*klingoConfig, error) {
 
 	if KLINGO_HOME := os.Getenv("KLINGO_HOME"); strings.TrimSpace(KLINGO_HOME) != "" {
 		klingoDir = KLINGO_HOME
+	} else {
+		klingoDir = path.Join(os.Getenv("HOME"), klingoDir)
 	}
 
-	err := initConfigFiles(klingoDir)
+	err := initConfigFileStructure(klingoDir)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(
+			err, "Failed initializing file structure",
+		)
 	}
 
-	// Load config to config var
-	err = loadConfig(klingoDir)
+	err = loadKlingoConfig(klingoDir) // to config var
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(
+			err, "Failed loading configuration files",
+		)
 	}
 
 	return config, nil
 }
 
-func initConfigFiles(dir string) error {
+func initConfigFileStructure(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err := os.Mkdir(dir, FullOwnerPermission); err != nil {
 			return err
@@ -70,10 +76,10 @@ func initConfigFiles(dir string) error {
 	}
 
 	defaultContext := path.Join(contextsDir, "default")
-	configFileSymLink := path.Join(contextsDir, "config")
+	configFileSymLink := path.Join(dir, "config")
 
 	if _, err := os.Stat(defaultContext); os.IsNotExist(err) {
-		comment := []byte("# config file used by default")
+		comment := []byte("# config file used by default\n")
 		err := ioutil.WriteFile(defaultContext, comment, FullOwnerPermission)
 		if err != nil {
 			return err
@@ -83,8 +89,6 @@ func initConfigFiles(dir string) error {
 			if err = os.Remove(configFileSymLink); err != nil {
 				return err
 			}
-		} else if err != nil {
-			return err
 		}
 	} else if err != nil {
 		return err
@@ -99,7 +103,7 @@ func initConfigFiles(dir string) error {
 	return nil
 }
 
-func loadConfig(dir string) error {
+func loadKlingoConfig(dir string) error {
 	config := &klingoConfig{
 		dir: dir,
 	}
