@@ -17,11 +17,7 @@ func newUseContextCmd() *cobra.Command {
 }
 
 func useContext(cmd *cobra.Command, args []string) error {
-	config, err := config.GetKlingoConfig()
-	if err != nil {
-		return err
-	}
-
+	config := config.GetKlingoConfig()
 	context := args[0]
 
 	if strings.TrimSpace(context) == "" {

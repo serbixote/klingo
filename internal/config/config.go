@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
@@ -24,39 +25,43 @@ type klingoConfig struct {
 }
 
 func (*klingoConfig) UseContext(context string) error {
-	return nil
+	return nil // TODO
 }
 
-func GetKlingoConfig() (*klingoConfig, error) {
-	if config != nil {
-		return config, nil
-	}
+func GetKlingoConfig() *klingoConfig {
+	return config
+}
 
+func init() {
 	klingoDir := defaultKlingoDir
 
-	if KLINGO_HOME := os.Getenv("KLINGO_HOME"); strings.TrimSpace(KLINGO_HOME) != "" {
-		klingoDir = KLINGO_HOME
+	if KLINGO_DIR := os.Getenv("KLINGO_DIR"); strings.TrimSpace(KLINGO_DIR) != "" {
+		klingoDir = KLINGO_DIR
 	} else {
 		klingoDir = path.Join(os.Getenv("HOME"), klingoDir)
 	}
 
 	err := initConfigFileStructure(klingoDir)
 	if err != nil {
-		return nil, errors.Wrap(
+		exit(errors.Wrap(
 			err, "Failed initializing file structure",
-		)
+		))
 	}
 
-	err = loadKlingoConfig(klingoDir) // to config var
+	err = loadKlingoConfig(klingoDir)
 	if err != nil {
-		return nil, errors.Wrap(
+		exit(errors.Wrap(
 			err, "Failed loading configuration files",
-		)
+		))
 	}
-
-	return config, nil
 }
 
+// initConfigFileStructure creates the config file structure in the
+// given dir param if needed:
+// .klingo/
+// |__ config (Symbolic link to any contexts/*)
+// |__ contexts/
+// |   |__ default
 func initConfigFileStructure(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err := os.Mkdir(dir, FullOwnerPermission); err != nil {
@@ -64,7 +69,7 @@ func initConfigFileStructure(dir string) error {
 		}
 	} else if err != nil {
 		return err
-	}
+	} // TODO: Check permissions of existing directory and warn user if needed
 
 	contextsDir := path.Join(dir, "contexts")
 	if _, err := os.Stat(contextsDir); os.IsNotExist(err) {
@@ -103,6 +108,16 @@ func initConfigFileStructure(dir string) error {
 	return nil
 }
 
+// loadKlingoConfig loads the configuration from the give dir param
+// to the config variable (implicitly). Expected directory structure:
+//
+// .klingo/
+// |__ config (Symbolic link to any contexts/*)
+// |__ contexts/
+// |   |__ default
+// |   |__ home
+// |   |__ project1
+// |   |__ ...
 func loadKlingoConfig(dir string) error {
 	config := &klingoConfig{
 		dir: dir,
@@ -129,6 +144,11 @@ func loadKlingoConfig(dir string) error {
 	}
 
 	config.currentContext = destination
-
 	return nil
+}
+
+// exit prints the error after exiting with 1 as exit code.
+func exit(e error) {
+	fmt.Println(e)
+	os.Exit(1)
 }
