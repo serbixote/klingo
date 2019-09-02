@@ -119,7 +119,7 @@ func initConfigFileStructure(dir string) error {
 // |   |__ project1
 // |   |__ ...
 func loadKlingoConfig(dir string) error {
-	config := &klingoConfig{
+	config = &klingoConfig{
 		dir: dir,
 	}
 
