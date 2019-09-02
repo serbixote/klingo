@@ -24,8 +24,28 @@ type klingoConfig struct {
 	currentContext string
 }
 
-func (*klingoConfig) UseContext(context string) error {
-	return nil // TODO
+func (c *klingoConfig) UseContext(context string) error {
+	for _, item := range c.contexts {
+		if item == context {
+			contextsDir := path.Join(c.dir, "contexts")
+			contextPath := path.Join(contextsDir, item)
+			configFileSymLink := path.Join(c.dir, "config")
+			if err := os.Remove(configFileSymLink); err != nil {
+				return err
+			}
+			if err := os.Symlink(contextPath, configFileSymLink); err != nil {
+				return err
+			}
+
+			c.currentContext = item
+
+			fmt.Printf("Switched to context %s\n", c.currentContext)
+
+			return nil
+		}
+	}
+
+	return errors.Errorf("no context exists with the name: %s", context)
 }
 
 func GetKlingoConfig() *klingoConfig {
