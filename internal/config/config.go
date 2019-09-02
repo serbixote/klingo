@@ -143,7 +143,7 @@ func loadKlingoConfig(dir string) error {
 		return err
 	}
 
-	config.currentContext = destination
+	config.currentContext = path.Base(destination)
 	return nil
 }
 
