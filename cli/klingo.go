@@ -25,18 +25,17 @@ func init() {
 	)
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Printf("error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
 func klingo(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return tui.RunTUI()
 	}
 
-	// TODO: Implement the quick connection using the args[0]
 	return nil
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Printf("error: %v\n", err)
+		os.Exit(1)
+	}
 }
