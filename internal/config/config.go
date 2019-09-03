@@ -24,6 +24,10 @@ type klingoConfig struct {
 	currentContext string
 }
 
+func (c *klingoConfig) CurrentContext() string {
+	return c.currentContext
+}
+
 func (c *klingoConfig) UseContext(context string) error {
 	for _, item := range c.contexts {
 		if item == context {
@@ -63,16 +67,18 @@ func init() {
 
 	err := initConfigFileStructure(klingoDir)
 	if err != nil {
-		exit(errors.Wrap(
+		fmt.Printf("error: %v", errors.Wrap(
 			err, "Failed initializing file structure",
 		))
+		os.Exit(1)
 	}
 
 	err = loadKlingoConfig(klingoDir)
 	if err != nil {
-		exit(errors.Wrap(
+		fmt.Printf("error: %v", errors.Wrap(
 			err, "Failed loading configuration files",
 		))
+		os.Exit(1)
 	}
 }
 
@@ -165,10 +171,4 @@ func loadKlingoConfig(dir string) error {
 
 	config.currentContext = path.Base(destination)
 	return nil
-}
-
-// exit prints the error after exiting with 1 as exit code.
-func exit(e error) {
-	fmt.Println(e)
-	os.Exit(1)
 }

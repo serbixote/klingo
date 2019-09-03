@@ -21,12 +21,13 @@ func init() {
 
 	rootCmd.AddCommand(
 		newUseContextCmd(),
+		newCurrentContextCmd(),
 	)
 }
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Printf("error: %v\n", err)
 		os.Exit(1)
 	}
 }
