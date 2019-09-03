@@ -36,6 +36,10 @@ func (c *klingoConfig) CurrentContext() string {
 	return c.currentContext
 }
 
+func (c *klingoConfig) Contexts() []string {
+	return c.contexts
+}
+
 func (c *klingoConfig) UseContext(context string) error {
 	for _, item := range c.contexts {
 		if item == context {

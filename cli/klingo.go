@@ -22,6 +22,7 @@ func init() {
 	rootCmd.AddCommand(
 		newUseContextCmd(),
 		newCurrentContextCmd(),
+		newGetContextsCmd(),
 	)
 }
 
