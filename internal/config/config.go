@@ -64,6 +64,10 @@ func (c *klingoConfig) UseContext(context string) error {
 	return errors.Errorf("no context exists with the name: %s", context)
 }
 
+func (c *klingoConfig) SetDefaultContext() error {
+	return c.UseContext(DefaultContextFileName)
+}
+
 func init() {
 	klingoDir := defaultKlingoDir
 
