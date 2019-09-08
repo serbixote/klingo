@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/marco2704/klingo/cli/context"
 	"github.com/marco2704/klingo/internal/tui"
 	"github.com/spf13/cobra"
 	"os"
@@ -13,25 +14,19 @@ func init() {
 	rootCmd = &cobra.Command{
 		Use:           "klingo",
 		Short:         "SSH Connection Manager",
-		Args:          cobra.MaximumNArgs(1),
 		RunE:          klingo,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
 
 	rootCmd.AddCommand(
-		newUseContextCmd(),
-		newCurrentContextCmd(),
-		newGetContextsCmd(),
+		newConnectCmd(),
+		context.NewContextCmd(),
 	)
 }
 
 func klingo(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return tui.RunTUI()
-	}
-
-	return nil
+	return tui.RunTUI()
 }
 
 func Execute() {

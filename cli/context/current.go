@@ -1,4 +1,4 @@
-package cli
+package context
 
 import (
 	"fmt"
@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCurrentContextCmd() *cobra.Command {
+func newCurrentCmd() *cobra.Command {
 	cmd := &cobra.Command{}
-	cmd.Use = "current-context"
-	cmd.Short = "Displays the current-context"
+	cmd.Use = "current"
+	cmd.Short = "Display the current context"
 	cmd.Args = cobra.NoArgs
 	cmd.Run = currentContext
 	return cmd

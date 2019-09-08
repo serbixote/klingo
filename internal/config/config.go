@@ -11,11 +11,10 @@ import (
 )
 
 const (
-	defaultKlingoDir       string      = ".klingo"
-	defaultContextsDir     string      = "contexts"
-	DefaultContextFileName string      = "default"
-	defaultConfigFileName  string      = "config"
-	fullOwnerPermission    os.FileMode = 0700
+	defaultKlingoDir   string = ".klingo"
+	defaultContextsDir string = "contexts"
+	defaultContextFile string = "default"
+	defaultConfigFile  string = "config"
 )
 
 var (
@@ -32,6 +31,77 @@ type klingoConfig struct {
 	currentContext string
 }
 
+func (c *klingoConfig) CreateContext(context string) error {
+	if c.contextExists(context) {
+		return errors.Errorf("context %s already exists", context)
+	}
+
+	contextFilePath := c.contextFilePath(context)
+	if err := createEmptyFile(contextFilePath); err != nil {
+		return errors.Wrap(err, "failed creating context")
+	}
+
+	fmt.Printf("Context %s has been created\n", context)
+
+	return nil
+}
+
+func (c *klingoConfig) UseContext(context string) error {
+	if context == "" {
+		context = defaultContextFile
+	}
+
+	if c.contextExists(context) {
+		contextFilePath := c.contextFilePath(context)
+		configFilePath := c.configFilePath()
+
+		if err := safeCreateSymLink(contextFilePath, configFilePath); err != nil {
+			return errors.Wrap(err, "failed switching context")
+		}
+
+		c.currentContext = context
+
+		fmt.Printf("Switched to context %s\n", c.currentContext)
+
+		return nil
+	}
+
+	return errors.Errorf("context %s does not exist", context)
+}
+
+func (c *klingoConfig) DeleteContext(context string) error {
+	if context == defaultContextFile {
+		return errors.Errorf("context %s can't be deleted", defaultContextFile)
+	}
+
+	if !c.contextExists(context) {
+		return errors.Errorf("context %s doesn't exist", context)
+	}
+
+	contextFilePath := c.contextFilePath(context)
+	if err := os.Remove(contextFilePath); err != nil {
+		return errors.Wrap(err, "failed deleting context")
+	}
+
+	fmt.Printf("Context %s has been deleted\n", context)
+
+	return nil
+}
+
+func (c *klingoConfig) RenameContext(oldContext, newContext string) error {
+	if c.contextExists(oldContext) {
+		return errors.Errorf("context %s doesn't exist", oldContext)
+	} else if c.contextExists(newContext) {
+		return errors.Errorf("context %s already exists", newContext)
+	}
+
+	if err := os.Rename(oldContext, newContext); err != nil {
+		return errors.Wrap(err, "failed renaming context")
+	}
+
+	return nil
+}
+
 func (c *klingoConfig) CurrentContext() string {
 	return c.currentContext
 }
@@ -40,32 +110,25 @@ func (c *klingoConfig) Contexts() []string {
 	return c.contexts
 }
 
-func (c *klingoConfig) UseContext(context string) error {
-	for _, item := range c.contexts {
-		if item == context {
-			contextsDirPath := path.Join(c.dirPath, defaultContextsDir)
-			contextFilePath := path.Join(contextsDirPath, item)
-			configFileSymLink := path.Join(c.dirPath, defaultConfigFileName)
-			if err := os.Remove(configFileSymLink); err != nil {
-				return err
-			}
-			if err := os.Symlink(contextFilePath, configFileSymLink); err != nil {
-				return err
-			}
-
-			c.currentContext = item
-
-			fmt.Printf("Switched to context %s\n", c.currentContext)
-
-			return nil
+func (c *klingoConfig) contextExists(context string) bool {
+	for _, i := range c.contexts {
+		if i == context {
+			return true
 		}
 	}
-
-	return errors.Errorf("no context exists with the name: %s", context)
+	return false
 }
 
-func (c *klingoConfig) SetDefaultContext() error {
-	return c.UseContext(DefaultContextFileName)
+func (c *klingoConfig) configFilePath() string {
+	return path.Join(c.dirPath, defaultConfigFile)
+}
+
+func (c *klingoConfig) contextsDirPath() string {
+	return path.Join(c.dirPath, defaultContextsDir)
+}
+
+func (c *klingoConfig) contextFilePath(context string) string {
+	return path.Join(c.dirPath, defaultContextsDir, context)
 }
 
 func init() {
@@ -77,78 +140,51 @@ func init() {
 		klingoDir = path.Join(os.Getenv("HOME"), klingoDir)
 	}
 
-	err := initConfigFileStructure(klingoDir)
-	if err != nil {
-		fmt.Printf("error: %v", errors.Wrap(
-			err, "Failed initializing file structure",
-		))
-		os.Exit(1)
+	config = &klingoConfig{
+		dirPath: klingoDir,
 	}
 
-	err = loadKlingoConfig(klingoDir)
-	if err != nil {
-		fmt.Printf("error: %v", errors.Wrap(
-			err, "Failed loading configuration files",
-		))
-		os.Exit(1)
+	if err := config.initConfigFileStructure(); err != nil {
+		panic(errors.Wrap(err, "failed initializing file structure"))
+	}
+
+	if err := config.loadKlingoConfig(); err != nil {
+		panic(errors.Wrap(err, "failed loading configuration files"))
 	}
 }
 
 // initConfigFileStructure creates the config file structure in the
-// given dir param if needed:
+// in dirPath (if needed):
 //
 // .klingo/
 // |__ config (Symbolic link to any contexts/*)
 // |__ contexts/
 // |   |__ default
-func initConfigFileStructure(dir string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.Mkdir(dir, fullOwnerPermission); err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	} // TODO: Check permissions of existing directory and warn user if needed
-
-	contextsDir := path.Join(dir, defaultContextsDir)
-	if _, err := os.Stat(contextsDir); os.IsNotExist(err) {
-		if err := os.Mkdir(contextsDir, fullOwnerPermission); err != nil {
-			return err
-		}
-	} else if err != nil {
+func (c *klingoConfig) initConfigFileStructure() error {
+	if err := createDirIfNotExists(c.dirPath); err != nil {
 		return err
 	}
 
-	defaultContext := path.Join(contextsDir, DefaultContextFileName)
-	configFileSymLink := path.Join(dir, defaultConfigFileName)
-
-	if _, err := os.Stat(defaultContext); os.IsNotExist(err) {
-		comment := []byte("# default config file\n")
-		err := ioutil.WriteFile(defaultContext, comment, fullOwnerPermission)
-		if err != nil {
-			return err
-		}
-
-		if _, err = os.Stat(configFileSymLink); os.IsExist(err) {
-			if err = os.Remove(configFileSymLink); err != nil {
-				return err
-			}
-		}
-	} else if err != nil {
+	contextsDirPath := c.contextsDirPath()
+	if err := createDirIfNotExists(contextsDirPath); err != nil {
 		return err
 	}
 
-	if _, err := os.Stat(configFileSymLink); os.IsNotExist(err) {
-		if err = os.Symlink(defaultContext, configFileSymLink); err != nil {
-			return err
-		}
+	contextFilePath := c.contextFilePath(defaultContextFile)
+	if err := createFileIfNotExists(contextFilePath); err != nil {
+		return err
+	}
+
+	configFilePath := c.configFilePath()
+	if err := createSymLinkIfNotExists(contextFilePath, configFilePath); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// loadKlingoConfig loads the configuration from the give dir param
-// to the config variable (implicitly). Expected directory structure:
+// loadKlingoConfig loads the configuration from file structure
+// at dirPath. Expected directory structure:
 //
 // .klingo/
 // |__ config (Symbolic link to any contexts/*)
@@ -157,12 +193,8 @@ func initConfigFileStructure(dir string) error {
 // |   |__ home
 // |   |__ project1
 // |   |__ ...
-func loadKlingoConfig(dir string) error {
-	config = &klingoConfig{
-		dirPath: dir,
-	}
-
-	contextsDirPath := path.Join(dir, defaultContextsDir)
+func (c *klingoConfig) loadKlingoConfig() error {
+	contextsDirPath := c.contextsDirPath()
 	files, err := ioutil.ReadDir(contextsDirPath)
 	if err != nil {
 		return err
@@ -170,19 +202,20 @@ func loadKlingoConfig(dir string) error {
 
 	for _, file := range files {
 		if !file.IsDir() {
-			config.contexts = append(
-				config.contexts,
+			c.contexts = append(
+				c.contexts,
 				file.Name(),
 			)
 		}
 	}
-	sort.Strings(config.contexts)
 
-	currentContextFileName, err := os.Readlink(path.Join(dir, defaultConfigFileName))
+	sort.Strings(c.contexts)
+
+	currentContext, err := os.Readlink(c.configFilePath())
 	if err != nil {
 		return err
 	}
 
-	config.currentContext = path.Base(currentContextFileName)
+	c.currentContext = path.Base(currentContext)
 	return nil
 }
