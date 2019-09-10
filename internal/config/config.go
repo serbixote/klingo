@@ -105,7 +105,10 @@ func (c *klingoConfig) RenameContext(oldContext, newContext string) error {
 		return errors.Errorf("context %s already exists", newContext)
 	}
 
-	if err := os.Rename(oldContext, newContext); err != nil {
+	oldContextPath := c.contextFilePath(oldContext)
+	newContextPath := c.contextFilePath(newContext)
+
+	if err := os.Rename(oldContextPath, newContextPath); err != nil {
 		return errors.Wrap(err, "failed renaming context")
 	}
 
