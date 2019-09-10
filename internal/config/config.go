@@ -112,6 +112,8 @@ func (c *klingoConfig) RenameContext(oldContext, newContext string) error {
 		return errors.Wrap(err, "failed renaming context")
 	}
 
+	fmt.Printf("Renamed context %s to %s\n", oldContext, newContext)
+
 	return nil
 }
 
