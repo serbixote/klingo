@@ -44,7 +44,7 @@ func (c *klingoConfig) CreateContext(context string) error {
 		return errors.Wrap(err, "failed creating context")
 	}
 
-	fmt.Printf("Context %s has been created\n", context)
+	fmt.Printf("Created context %s\n", context)
 
 	return nil
 }
@@ -91,7 +91,7 @@ func (c *klingoConfig) DeleteContext(context string) error {
 		return errors.Wrap(err, "failed deleting context")
 	}
 
-	fmt.Printf("Context %s has been deleted\n", context)
+	fmt.Printf("Deleted context %s\n", context)
 
 	return nil
 }
