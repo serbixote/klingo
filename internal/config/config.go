@@ -21,16 +21,19 @@ var (
 	config *klingoConfig
 )
 
-func GetKlingoConfig() *klingoConfig {
-	return config
-}
-
 type klingoConfig struct {
 	dirPath        string
 	contexts       []string
 	currentContext string
 }
 
+// GetKlingoConfig returns the only klingoConfig instance.
+func GetKlingoConfig() *klingoConfig {
+	return config
+}
+
+// CreateContext creates a new context. It will return a non
+// nil error if the context already exist.
 func (c *klingoConfig) CreateContext(context string) error {
 	if c.contextExists(context) {
 		return errors.Errorf("context %s already exists", context)
@@ -46,6 +49,9 @@ func (c *klingoConfig) CreateContext(context string) error {
 	return nil
 }
 
+// UseContext sets context as the current one. Default context
+// will be set when context is a empty string. It will return
+// non nil error if context does not exist.
 func (c *klingoConfig) UseContext(context string) error {
 	if context == "" {
 		context = defaultContextFile
@@ -69,6 +75,8 @@ func (c *klingoConfig) UseContext(context string) error {
 	return errors.Errorf("context %s does not exist", context)
 }
 
+// DeleteContext deletes a context, except if it is the default one.
+// It will return a non nil error if context does not exist.
 func (c *klingoConfig) DeleteContext(context string) error {
 	if context == defaultContextFile {
 		return errors.Errorf("context %s can't be deleted", defaultContextFile)
@@ -88,6 +96,8 @@ func (c *klingoConfig) DeleteContext(context string) error {
 	return nil
 }
 
+// RenameContext rename an existing context. It returns a non nil
+// error if oldContext doesn't exist or newContext already exists.
 func (c *klingoConfig) RenameContext(oldContext, newContext string) error {
 	if c.contextExists(oldContext) {
 		return errors.Errorf("context %s doesn't exist", oldContext)
@@ -102,10 +112,12 @@ func (c *klingoConfig) RenameContext(oldContext, newContext string) error {
 	return nil
 }
 
+// CurrentContext returns the current context.
 func (c *klingoConfig) CurrentContext() string {
 	return c.currentContext
 }
 
+// Contexts returns a context list.
 func (c *klingoConfig) Contexts() []string {
 	return c.contexts
 }
@@ -211,11 +223,11 @@ func (c *klingoConfig) loadKlingoConfig() error {
 
 	sort.Strings(c.contexts)
 
-	currentContext, err := os.Readlink(c.configFilePath())
+	currentContextPath, err := os.Readlink(c.configFilePath())
 	if err != nil {
 		return err
 	}
 
-	c.currentContext = path.Base(currentContext)
+	c.currentContext = path.Base(currentContextPath)
 	return nil
 }
