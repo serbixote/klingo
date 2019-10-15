@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/marco2704/klingo/internal/utils"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
@@ -37,7 +38,7 @@ func (c *klingoConfig) CreateContext(context string) error {
 	}
 
 	contextFilePath := c.contextFilePath(context)
-	if err := createEmptyFile(contextFilePath); err != nil {
+	if err := utils.CreateEmptyFile(contextFilePath); err != nil {
 		return errors.Wrap(err, "failed creating context")
 	}
 
@@ -55,7 +56,7 @@ func (c *klingoConfig) UseContext(context string) error {
 		contextFilePath := c.contextFilePath(context)
 		configFilePath := c.configFilePath()
 
-		if err := safeCreateSymLink(contextFilePath, configFilePath); err != nil {
+		if err := utils.SafeCreateSymLink(contextFilePath, configFilePath); err != nil {
 			return errors.Wrap(err, "failed switching context")
 		}
 
@@ -166,22 +167,22 @@ func init() {
 // |__ contexts/
 // |   |__ default
 func (c *klingoConfig) initConfigFileStructure() error {
-	if err := createDirIfNotExists(c.dirPath); err != nil {
+	if err := utils.CreateDirIfNotExists(c.dirPath); err != nil {
 		return err
 	}
 
 	contextsDirPath := c.contextsDirPath()
-	if err := createDirIfNotExists(contextsDirPath); err != nil {
+	if err := utils.CreateDirIfNotExists(contextsDirPath); err != nil {
 		return err
 	}
 
 	contextFilePath := c.contextFilePath(defaultContextFile)
-	if err := createFileIfNotExists(contextFilePath); err != nil {
+	if err := utils.CreateFileIfNotExists(contextFilePath); err != nil {
 		return err
 	}
 
 	configFilePath := c.configFilePath()
-	if err := createSymLinkIfNotExists(contextFilePath, configFilePath); err != nil {
+	if err := utils.CreateSymLinkIfNotExists(contextFilePath, configFilePath); err != nil {
 		return err
 	}
 
