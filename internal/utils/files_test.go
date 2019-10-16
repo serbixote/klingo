@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
 	"testing"
@@ -11,22 +11,28 @@ func workDirAbsolutePath(t *testing.T) string {
 	t.Helper()
 
 	wd, err := os.Getwd()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	return wd
+}
+
+func removeFile(t *testing.T, fileAbsolutePath string) {
+	err := os.Remove(fileAbsolutePath)
+	assert.Nil(t, err)
 }
 
 func TestCreateEmptyFile(t *testing.T) {
 	wd := workDirAbsolutePath(t)
-	emptyFileAbsolutePath := path.Join(wd, "testdata", "empty-file")
+	newEmptyFileAbsolutePath := path.Join(wd, "testdata", "new-empty-file")
 
-	err := CreateEmptyFile(emptyFileAbsolutePath)
-	assert.NilError(t, err)
+	err := CreateEmptyFile(newEmptyFileAbsolutePath)
+	assert.Nil(t, err)
 
-	if fileInfo, err := os.Stat(emptyFileAbsolutePath); os.IsNotExist(err) {
-		t.Errorf("%s file wasn't created", emptyFileAbsolutePath)
+	if fileInfo, err := os.Stat(newEmptyFileAbsolutePath); os.IsNotExist(err) {
+		t.Errorf("%s file wasn't created", newEmptyFileAbsolutePath)
 	} else if fileInfo.Size() > 0 {
-		t.Errorf("%s file isn't empty", emptyFileAbsolutePath)
+		t.Errorf("%s file isn't empty", newEmptyFileAbsolutePath)
 	}
 
-	assert.NilError(t, err)
+	assert.Nil(t, err)
+	removeFile(t, newEmptyFileAbsolutePath)
 }
