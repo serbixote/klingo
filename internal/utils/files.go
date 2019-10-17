@@ -23,20 +23,20 @@ func CreateSymLinkIfNotExists(oldName, newName string) (err error) {
 	return err
 }
 
-func CreateDirIfNotExists(absoluteDirPath string) (err error) {
-	if _, err := os.Stat(absoluteDirPath); os.IsNotExist(err) {
-		return os.Mkdir(absoluteDirPath, fullOwnerPermission)
+func CreateDirIfNotExists(dirPath string) (err error) {
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		return os.Mkdir(dirPath, fullOwnerPermission)
 	}
 	return err
 }
 
-func CreateFileIfNotExists(absoluteFilePath string) (err error) {
-	if _, err = os.Stat(absoluteFilePath); os.IsNotExist(err) {
-		return CreateEmptyFile(absoluteFilePath)
+func CreateEmptyFileIfNotExists(filePath string) (err error) {
+	if _, err = os.Stat(filePath); os.IsNotExist(err) {
+		return CreateEmptyFile(filePath)
 	}
 	return err
 }
 
-func CreateEmptyFile(absoluteFilePath string) error {
-	return ioutil.WriteFile(absoluteFilePath, nil, fullOwnerPermission)
+func CreateEmptyFile(filePath string) error {
+	return ioutil.WriteFile(filePath, nil, fullOwnerPermission)
 }

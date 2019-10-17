@@ -177,7 +177,7 @@ func (c *klingoConfig) initConfigFileStructure() error {
 	}
 
 	contextFilePath := c.contextFilePath(defaultContextFile)
-	if err := utils.CreateFileIfNotExists(contextFilePath); err != nil {
+	if err := utils.CreateEmptyFileIfNotExists(contextFilePath); err != nil {
 		return err
 	}
 
