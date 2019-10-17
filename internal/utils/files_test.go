@@ -29,10 +29,11 @@ func TestCreateEmptyFile(t *testing.T) {
 
 	if fileInfo, err := os.Stat(newEmptyFileAbsolutePath); os.IsNotExist(err) {
 		t.Errorf("%s file wasn't created", newEmptyFileAbsolutePath)
+	} else if err != nil {
+		t.Errorf("Expected nil, but got: %#v", err)
 	} else if fileInfo.Size() > 0 {
 		t.Errorf("%s file isn't empty", newEmptyFileAbsolutePath)
 	}
 
-	assert.Nil(t, err)
 	removeFile(t, newEmptyFileAbsolutePath)
 }
