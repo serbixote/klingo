@@ -1,0 +1,25 @@
+versions: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.12
+    working_directory: /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    steps:
+      - checkout
+      - run: make
+  test:
+    docker:
+      - image: circleci/golang:1.12
+    working_directory: /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    steps:
+      - checkout
+      - run: make test
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
